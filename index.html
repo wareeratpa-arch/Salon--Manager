@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0d0d14" />
+  <title>Peaches & Be On Hand Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; background: #0d0d14; color: #ede8e0; min-height: 100vh; }
+    #app { max-width: 520px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 88px; }
+
+    /* Header */
+    .header { background: linear-gradient(180deg,#16141c,#111018); border-bottom: 1px solid #1e1c28; position: sticky; top: 0; z-index: 100; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 8px; }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .gem { color: #d4a84b; font-size: 15px; }
+    .brand-name { font-weight: 700; font-size: 14px; letter-spacing: .5px; }
+    .settings-btn { background: none; border: none; color: #d4a84b; font-size: 20px; cursor: pointer; }
+    .branch-row { display: flex; padding: 0 16px 10px; gap: 6px; }
+    .branch-btn { flex: 1; background: #1a1826; border: 1px solid #252330; border-radius: 8px; color: #555; font-size: 12px; padding: 7px 4px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .branch-btn.active { background: #d4a84b; color: #0d0d14; border-color: #d4a84b; font-weight: 700; }
+
+    /* Nav */
+    nav { display: flex; background: #111018; border-bottom: 1px solid #1a1826; position: sticky; top: 88px; z-index: 99; }
+    .nav-btn { flex: 1; background: none; border: none; border-bottom: 2px solid transparent; color: #444; font-size: 11px; padding: 10px 2px; cursor: pointer; font-family: inherit; }
+    .nav-btn.active { color: #d4a84b; border-bottom-color: #d4a84b; }
+
+    /* Main */
+    main { padding: 16px; }
+    .section-lbl { font-size: 10px; color: #444; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 8px; }
+    .date-label { text-align: center; color: #444; font-size: 12px; margin: 0 0 14px; }
+
+    /* KPI */
+    .kpi-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+    .kpi-card { flex: 1 1 110px; background: #16141c; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .kpi-card.wide { flex: 1 1 100%; flex-direction: row; align-items: center; justify-content: space-between; }
+    .kpi-label { font-size: 11px; color: #444; margin: 0; }
+    .kpi-val { font-size: 20px; font-weight: 700; margin: 0; }
+
+    /* Cat box */
+    .cat-box { background: #16141c; border-radius: 10px; overflow: hidden; margin-bottom: 4px; }
+    .cat-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid #1a1826; }
+    .cat-label { font-size: 13px; color: #ccc; }
+    .cat-val { font-size: 13px; font-weight: 700; }
+
+    /* Transaction */
+    .tx-list { display: flex; flex-direction: column; gap: 7px; }
+    .tx-row { display: flex; align-items: center; gap: 9px; background: #16141c; border-radius: 10px; padding: 10px 12px; }
+    .tx-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-cat { margin: 0; font-size: 13px; font-weight: 600; }
+    .tx-meta { margin: 3px 0 0; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .badge { font-size: 10px; background: #1e1c28; color: #777; border-radius: 4px; padding: 1px 5px; }
+    .tx-date { font-size: 11px; color: #333; }
+    .tx-note { margin: 2px 0 0; font-size: 11px; color: #444; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tx-amt { font-weight: 700; font-size: 14px; white-space: nowrap; }
+    .del-btn { background: none; border: none; color: #333; cursor: pointer; font-size: 14px; padding: 4px; flex-shrink: 0; }
+    .empty { text-align: center; color: #333; padding: 32px 0; font-size: 13px; }
+
+    /* List controls */
+    .list-top { display: flex; gap: 8px; margin-bottom: 10px; }
+    .date-input { flex: 1; background: #16141c; border: 1px solid #1e1c28; border-radius: 8px; padding: 8px 10px; color: #ede8e0; font-size: 13px; font-family: inherit; }
+    .add-btn { border: none; border-radius: 8px; padding: 8px 16px; color: #0d0d14; font-weight: 700; cursor: pointer; font-size: 13px; font-family: inherit; }
+    .total-banner { background: #16141c; border-radius: 8px; padding: 9px 14px; font-size: 13px; color: #888; margin-bottom: 10px; }
+
+    /* Commission */
+    .comm-card { display: flex; align-items: center; gap: 12px; background: #16141c; border-radius: 12px; padding: 13px; margin-bottom: 7px; }
+    .comm-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#d4a84b,#f0cc7a); color: #0d0d14; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .comm-info { flex: 1; }
+    .comm-name { margin: 0; font-weight: 700; font-size: 14px; }
+    .comm-sub { margin: 2px 0 0; font-size: 11px; color: #444; }
+    .comm-right { text-align: right; }
+    .comm-val { margin: 0; font-size: 18px; font-weight: 700; color: #d4a84b; }
+    .comm-lbl { margin: 0; font-size: 10px; color: #333; }
+    .comm-total { text-align: right; padding: 10px 0 2px; font-size: 13px; color: #888; border-top: 1px solid #1a1826; margin-top: 4px; }
+
+    /* FAB */
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 54px; height: 54px; border-radius: 50%; border: none; color: #0d0d14; font-size: 26px; font-weight: 700; cursor: pointer; z-index: 200; box-shadow: 0 4px 20px rgba(212,168,75,.3); display: flex; align-items: center; justify-content: center; }
+
+    /* Modal */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 300; display: flex; align-items: flex-end; justify-content: center; }
+    .modal { background: #16141c; border-radius: 18px 18px 0 0; padding: 22px 18px 40px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { margin: 0 0 16px; font-size: 17px; font-weight: 700; }
+    .field-label { display: block; font-size: 10px; color: #555; letter-spacing: .8px; margin-bottom: 4px; text-transform: uppercase; }
+    .input { width: 100%; background: #0d0d14; border: 1px solid #1e1c28; border-radius: 8px; padding: 9px 11px; color: #ede8e0; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
+    .input-amount { font-size: 22px; font-weight: 700; }
+    .pay-row { display: flex; gap: 7px; margin-bottom: 14px; }
+    .pay-btn { flex: 1; background: #1a1826; border: 1px solid #1e1c28; border-radius: 7px; padding: 8px 4px; color: #555; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .pay-btn.active { background: #d4a84b; color: #0d0d14; font-weight: 700; border-color: #d4a84b; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .cancel-btn { flex: 1; background: #1a1826; border: none; border-radius: 8px; padding: 13px; color: #555; font-size: 14px; cursor: pointer; font-family: inherit; }
+    .save-btn { flex: 2; border: none; border-radius: 8px; padding: 13px; color: #0d0d14; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    /* Settings grid */
+    .staff-grid { display: grid; grid-template-columns: 1fr 68px 58px 28px; gap: 6px; align-items: center; margin-bottom: 7px; }
+    .staff-grid-header { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+
+    /* Toast */
+    .toast { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #fff; z-index: 400; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,.4); pointer-events: none; }
+
+    /* Splash */
+    .splash { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+    .splash-gem { font-size: 48px; color: #d4a84b; margin-bottom: 16px; }
+
+    select option { background: #0d0d14; }
+    input[type=date]::-webkit-calendar-picker-indicator { filter: invert(.4); }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// =====================================================
+// ⚠️ แทนที่ค่าด้านล่างด้วย config จาก Firebase ของคุณ
+// =====================================================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+// =====================================================
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── Constants ──────────────────────────────────────
+const BRANCHES = ["Peaches Nails", "Be On Hand"];
+const SERVICE_CATS = ["ทำเล็บมือ","ทำเล็บเท้า","ทำเล็บ มือ+เท้า","สปามือ","สปาเท้า","สปา มือ+เท้า","เล็บ+สปา","ต่อขนตา","Lifting ขนตา","Wax","Shape คิ้ว","อื่นๆ"];
+const EXPENSE_CATS = ["ค่าแรง","ค่าเช่าที่","อุปกรณ์ทำเล็บ","อุปกรณ์สปา","เบ็ดเตล็ด","ค่าน้ำ/ไฟ","Internet","ค่ารถ","ค่าอาหาร-น้ำดื่ม","ส่วนตัว","อื่นๆ"];
+const PAYMENT_METHODS = ["โอน","เงินสด","รูดบัตร"];
+const DEFAULT_STAFF = [
+  {name:"น้ำผึ้ง",dailyRate:400,commRate:10},{name:"ครีม",dailyRate:400,commRate:10},
+  {name:"ฝ้าย",dailyRate:500,commRate:10},{name:"กล้วย",dailyRate:300,commRate:10},
+  {name:"ออม",dailyRate:300,commRate:10},{name:"แอม",dailyRate:400,commRate:10},
+  {name:"นาเดีย",dailyRate:400,commRate:15},{name:"มุก",dailyRate:600,commRate:10},
+  {name:"ชุ",dailyRate:300,commRate:30}
+];
+
+// ── State ──────────────────────────────────────────
+let state = {
+  tab: "dashboard",
+  branch: "Peaches Nails",
+  transactions: [],
+  staff: DEFAULT_STAFF,
+  modal: null,
+  loading: true,
+  toastTimer: null,
+  modalData: {}
+};
+
+const todayStr = () => new Date().toISOString().slice(0,10);
+const monthStr = () => todayStr().slice(0,7);
+const fmt = n => (n||0).toLocaleString("th-TH");
+
+// ── Firebase listeners ─────────────────────────────
+getDoc(doc(db,"config","staff")).then(snap => {
+  if (snap.exists()) state.staff = snap.data().list;
+});
+
+const q = query(collection(db,"transactions"), orderBy("createdAt","desc"));
+onSnapshot(q, snap => {
+  state.transactions = snap.docs.map(d => ({id:d.id,...d.data()}));
+  state.loading = false;
+  render();
+});
+
+// ── Firestore actions ──────────────────────────────
+async function addTx(tx) {
+  await addDoc(collection(db,"transactions"), {...tx, createdAt: serverTimestamp()});
+  showToast("บันทึกสำเร็จ ✓");
+  closeModal();
+}
+
+async function delTx(id) {
+  if (!confirm("ลบรายการนี้?")) return;
+  await deleteDoc(doc(db,"transactions",id));
+  showToast("ลบแล้ว","warn");
+}
+
+async function saveStaff(list) {
+  state.staff = list;
+  await setDoc(doc(db,"config","staff"),{list});
+  showToast("บันทึกการตั้งค่าแล้ว ✓");
+  closeModal();
+}
+
+// ── UI helpers ─────────────────────────────────────
+function showToast(msg, type="ok") {
+  let t = document.getElementById("toast");
+  if (!t) { t = document.createElement("div"); t.id="toast"; t.className="toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.background = type==="warn"?"#8a3a3a":"#3a6a50";
+  t.style.display = "block";
+  clearTimeout(state.toastTimer);
+  state.toastTimer = setTimeout(() => { t.style.display="none"; }, 2600);
+}
+
+function closeModal() { state.modal = null; render(); }
+
+function setTab(tab) { state.tab=tab; render(); }
+function setBranch(b) { state.branch=b; render(); }
+
+// ── Computed ───────────────────────────────────────
+function getStats() {
+  const today = todayStr(), month = monthStr();
+  const todayTx = state.transactions.filter(t => t.date===today);
+  const todayIncome = todayTx.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+  const todayExpense = todayTx.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
+  const monthIncome = state.transactions.filter(t=>t.type==="income"&&t.date?.startsWith(month));
+  const monthExpense = state.transactions.filter(t=>t.type==="expense"&&t.date?.startsWith(month));
+  const mInc = monthIncome.reduce((s,t)=>s+t.amount,0);
+  const mExp = monthExpense.reduce((s,t)=>s+t.amount,0);
+  const commRows = state.staff.map(s=>{
+    const sales = monthIncome.filter(t=>t.staffName===s.name).reduce((a,t)=>a+t.amount,0);
+    return {...s, sales, comm: Math.round(sales*s.commRate/100)};
+  }).filter(s=>s.sales>0);
+  return {todayTx, todayIncome, todayExpense, monthIncome, monthExpense, mInc, mExp, commRows};
+}
+
+// ── Render ─────────────────────────────────────────
+function render() {
+  const el = document.getElementById("app");
+  if (state.loading) {
+    el.innerHTML = `<div class="splash"><div class="splash-gem">◆</div><p style="color:#555;font-size:16px">กำลังโหลด...</p></div>`;
+    return;
+  }
+  const stats = getStats();
+  el.innerHTML = `
+    ${renderHeader()}
+    ${renderNav()}
+    <main>${renderContent(stats)}</main>
+    ${renderFAB()}
+    ${state.modal ? renderModal() : ""}
+  `;
+  attachEvents(stats);
+}
+
+function renderHeader() {
+  return `
+    <header class="header">
+      <div class="header-row">
+        <div class="brand"><span class="gem">◆</span><span class="brand-name">Peaches &amp; Be On Hand</span></div>
+        <button class="settings-btn" id="btn-settings">⚙</button>
+      </div>
+      <div class="branch-row">
+        ${BRANCHES.map(b=>`<button class="branch-btn${state.branch===b?" active":""}" data-branch="${b}">${b==="Peaches Nails"?"🌸 ":"🤲 "}${b}</button>`).join("")}
+      </div>
+    </header>`;
+}
+
+function renderNav() {
+  const tabs = [["dashboard","📊 ภาพรวม"],["income","💰 รายรับ"],["expense","📤 รายจ่าย"],["commission","💎 ค่าคอม"]];
+  return `<nav>${tabs.map(([k,l])=>`<button class="nav-btn${state.tab===k?" active":""}" data-tab="${k}">${l}</button>`).join("")}</nav>`;
+}
+
+function renderContent(stats) {
+  if (state.tab==="dashboard") return renderDashboard(stats);
+  if (state.tab==="income") return renderTxList(stats, "income");
+  if (state.tab==="expense") return renderTxList(stats, "expense");
+  if (state.tab==="commission") return renderCommission(stats);
+  return "";
+}
+
+function renderDashboard({todayTx, todayIncome, todayExpense, mInc, mExp}) {
+  const net = todayIncome-todayExpense, mNet = mInc-mExp;
+  const dateLabel = new Date().toLocaleDateString("th-TH",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const byCat = SERVICE_CATS.map(cat=>({cat,total:todayTx.filter(t=>t.type==="income"&&t.category===cat).reduce((s,t)=>s+t.amount,0)})).filter(c=>c.total>0);
+  const byPay = PAYMENT_METHODS.map(pm=>({pm,total:todayTx.filter(t=>t.type==="income"&&t.paymentMethod===pm).reduce((s,t)=>s+t.amount,0)})).filter(c=>c.total>0);
+  return `
+    <p class="date-label">${dateLabel}</p>
+    <p class="section-lbl">วันนี้</p>
+    <div class="kpi-grid">
+      ${kpiCard("💰","รายรับ",todayIncome,"#d4a84b")}
+      ${kpiCard("📤","รายจ่าย",todayExpense,"#b05050")}
+      ${kpiCard("📈","กำไรสุทธิ",net,net>=0?"#5a9a72":"#b05050",true)}
+    </div>
+    <p class="section-lbl" style="margin-top:20px">เดือนนี้</p>
+    <div class="kpi-grid">
+      ${kpiCard("📅","รายรับรวม",mInc,"#d4a84b")}
+      ${kpiCard("📅","รายจ่ายรวม",mExp,"#b05050")}
+      ${kpiCard("💹","กำไรเดือน",mNet,mNet>=0?"#5a9a72":"#b05050",true)}
+    </div>
+    ${byCat.length?`<p class="section-lbl" style="margin-top:20px">รายรับแยกบริการวันนี้</p><div class="cat-box">${byCat.map(c=>`<div class="cat-row"><span class="cat-label">${c.cat}</span><span class="cat-val" style="color:#d4a84b">฿${fmt(c.total)}</span></div>`).join("")}</div>`:""}
+    ${byPay.length?`<p class="section-lbl" style="margin-top:14px">วิธีชำระเงินวันนี้</p><div class="cat-box">${byPay.map(c=>`<div class="cat-row"><span class="cat-label">${c.pm}</span><span class="cat-val" style="color:#7a9abf">฿${fmt(c.total)}</span></div>`).join("")}</div>`:""}
+    <p class="section-lbl" style="margin-top:20px">รายการวันนี้ (${todayTx.length})</p>
+    ${todayTx.length?`<div class="tx-list">${todayTx.map(txRow).join("")}</div>`:`<p class="empty">ยังไม่มีรายการวันนี้</p>`}
+  `;
+}
+
+function kpiCard(icon, label, value, color, wide=false) {
+  return `<div class="kpi-card${wide?" wide":""}" style="border-top:3px solid ${color}"><span>${icon}</span><p class="kpi-label">${label}</p><p class="kpi-val" style="color:${color}">${value<0?"-":""}฿${fmt(Math.abs(value))}</p></div>`;
+}
+
+function txRow(tx) {
+  const isIncome = tx.type==="income", color = isIncome?"#d4a84b":"#b05050";
+  return `
+    <div class="tx-row">
+      <div class="tx-dot" style="background:${color}"></div>
+      <div class="tx-info">
+        <p class="tx-cat">${tx.category||""}${tx.staffName?` · ${tx.staffName}`:""}</p>
+        <p class="tx-meta">
+          ${tx.branch?`<span class="badge">${tx.branch==="Peaches Nails"?"🌸 P":"🤲 B"}</span>`:""}
+          ${tx.paymentMethod?`<span class="badge" style="background:#1a1a26">${tx.paymentMethod}</span>`:""}
+          <span class="tx-date">${tx.date||""}</span>
+        </p>
+        ${tx.note?`<p class="tx-note">${tx.note}</p>`:""}
+      </div>
+      <p class="tx-amt" style="color:${color}">${isIncome?"+":"-"}฿${fmt(tx.amount)}</p>
+      <button class="del-btn" data-delid="${tx.id}">✕</button>
+    </div>`;
+}
+
+function renderTxList(stats, type) {
+  const filterDate = state.modalData[`filter_${type}`]||"";
+  const txs = state.transactions.filter(t=>t.type===type&&t.branch===state.branch);
+  const filtered = filterDate?txs.filter(t=>t.date===filterDate):txs;
+  const total = filtered.reduce((s,t)=>s+t.amount,0);
+  const color = type==="income"?"#d4a84b":"#b05050";
+  return `
+    <div class="list-top">
+      <input type="date" class="date-input" id="filter-date-${type}" value="${filterDate}" />
+      <button class="add-btn" style="background:${color}" id="btn-add-${type}">+ เพิ่ม</button>
+    </div>
+    <div class="total-banner">${filterDate||"ทั้งหมด"} · <strong>฿${fmt(total)}</strong> <span style="opacity:.5;font-size:12px;margin-left:6px">(${filtered.length} รายการ)</span></div>
+    ${filtered.length?`<div class="tx-list">${filtered.map(txRow).join("")}</div>`:`<p class="empty">ไม่มีรายการ</p>`}
+  `;
+}
+
+function renderCommission({commRows}) {
+  const [y,m] = monthStr().split("-");
+  const label = new Date(+y,+m-1,1).toLocaleDateString("th-TH",{year:"numeric",month:"long"});
+  const totalComm = commRows.reduce((s,r)=>s+r.comm,0);
+  return `
+    <p class="section-lbl">ค่าคอมมิชชั่น · ${label}</p>
+    ${commRows.length===0?`<p class="empty">ยังไม่มีรายรับเดือนนี้</p>`:`
+      ${commRows.map(r=>`
+        <div class="comm-card">
+          <div class="comm-avatar">${r.name[0]}</div>
+          <div class="comm-info"><p class="comm-name">${r.name}</p><p class="comm-sub">ยอดขาย ฿${fmt(r.sales)} · ${r.commRate}%</p></div>
+          <div class="comm-right"><p class="comm-val">฿${fmt(r.comm)}</p><p class="comm-lbl">ค่าคอม</p></div>
+        </div>`).join("")}
+      <div class="comm-total">รวมค่าคอมทั้งหมด <strong>฿${fmt(totalComm)}</strong></div>
+    `}
+    <p class="section-lbl" style="margin-top:20px">อัตราค่าคอมพนักงาน</p>
+    <div class="cat-box">
+      ${state.staff.map(s=>`<div class="cat-row"><span class="cat-label">${s.name}</span><span style="font-size:12px;color:#555">฿${fmt(s.dailyRate)}/วัน · ${s.commRate}%</span></div>`).join("")}
+    </div>
+  `;
+}
+
+function renderFAB() {
+  if (state.tab==="income") return `<button class="fab" id="fab-income" style="background:linear-gradient(135deg,#d4a84b,#f0cc7a)">＋</button>`;
+  if (state.tab==="expense") return `<button class="fab" id="fab-expense" style="background:linear-gradient(135deg,#b05050,#d07070)">＋</button>`;
+  return "";
+}
+
+function renderModal() {
+  if (state.modal==="income"||state.modal==="expense") return renderAddModal();
+  if (state.modal==="settings") return renderSettingsModal();
+  return "";
+}
+
+function renderAddModal() {
+  const type = state.modal, isIncome = type==="income", accent = isIncome?"#d4a84b":"#b05050";
+  const d = state.modalData;
+  return `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2 class="modal-title" style="color:${accent}">${isIncome?"💰 เพิ่มรายรับ":"📤 เพิ่มรายจ่าย"}</h2>
+        <label class="field-label">สาขา</label>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          ${BRANCHES.map(b=>`<button class="branch-btn${(d.branch||state.branch)===b?" active":""}" style="flex:1" data-modal-branch="${b}">${b}</button>`).join("")}
+        </div>
+        <label class="field-label">วันที่</label>
+        <input type="date" class="input" id="m-date" value="${d.date||todayStr()}" />
+        <label class="field-label">จำนวนเงิน (฿)</label>
+        <input type="number" class="input input-amount" id="m-amount" placeholder="0" value="${d.amount||""}" style="color:${accent}" />
+        <label class="field-label">หมวดหมู่</label>
+        <select class="input" id="m-cat">${(isIncome?SERVICE_CATS:EXPENSE_CATS).map(c=>`<option${c===(d.cat||(isIncome?SERVICE_CATS[0]:EXPENSE_CATS[0]))?" selected":""}>${c}</option>`).join("")}</select>
+        ${isIncome?`
+          <label class="field-label">พนักงาน</label>
+          <select class="input" id="m-staff">
+            <option value="">-- ไม่ระบุ --</option>
+            ${state.staff.map(s=>`<option${s.name===d.staffName?" selected":""}>${s.name}</option>`).join("")}
+          </select>
+          <label class="field-label">วิธีชำระเงิน</label>
+          <div class="pay-row">
+            ${PAYMENT_METHODS.map(pm=>`<button class="pay-btn${(d.payMethod||"โอน")===pm?" active":""}" data-pay="${pm}">${pm}</button>`).join("")}
+          </div>
+        `:""}
+        <label class="field-label">หมายเหตุ</label>
+        <input type="text" class="input" id="m-note" placeholder="หมายเหตุ..." value="${d.note||""}" />
+        <div class="modal-actions">
+          <button class="cancel-btn" id="btn-cancel">ยกเลิก</button>
+          <button class="save-btn" id="btn-save" style="background:${accent}">บันทึก</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderSettingsModal() {
+  const list = state.modalData.staffList || state.staff.map(s=>({...s}));
+  return `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2 class="modal-title">⚙️ ตั้งค่าพนักงาน</h2>
+        <div class="staff-grid staff-grid-header"><span>ชื่อ</span><span style="text-align:center">ค่าแรง/วัน</span><span style="text-align:center">คอม%</span><span></span></div>
+        ${list.map((s,i)=>`
+          <div class="staff-grid">
+            <input class="input" style="margin-bottom:0;font-size:13px" data-staff-name="${i}" value="${s.name}" />
+            <input type="number" class="input" style="margin-bottom:0;text-align:center;font-size:13px" data-staff-rate="${i}" value="${s.dailyRate}" />
+            <input type="number" class="input" style="margin-bottom:0;text-align:center;font-size:13px;color:#d4a84b" data-staff-comm="${i}" value="${s.commRate}" />
+            <button class="del-btn" data-remove-staff="${i}">✕</button>
+          </div>`).join("")}
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <input type="text" class="input" style="flex:1;margin-bottom:0" id="new-staff-name" placeholder="ชื่อพนักงานใหม่" />
+          <button class="save-btn" style="background:#d4a84b;flex:0;padding:9px 14px;white-space:nowrap" id="btn-add-staff">+ เพิ่ม</button>
+        </div>
+        <div class="modal-actions" style="margin-top:20px">
+          <button class="cancel-btn" id="btn-cancel">ยกเลิก</button>
+          <button class="save-btn" id="btn-save-staff" style="background:#d4a84b">บันทึก</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Event attachment ───────────────────────────────
+function attachEvents(stats) {
+  // Tab & branch
+  document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+  document.querySelectorAll("[data-branch]").forEach(b => b.addEventListener("click", () => setBranch(b.dataset.branch)));
+
+  // Settings
+  document.getElementById("btn-settings")?.addEventListener("click", () => { state.modal="settings"; state.modalData={staffList:state.staff.map(s=>({...s}))}; render(); });
+
+  // FAB / add buttons
+  ["income","expense"].forEach(type => {
+    document.getElementById(`fab-${type}`)?.addEventListener("click", () => { state.modal=type; state.modalData={branch:state.branch,payMethod:"โอน"}; render(); });
+    document.getElementById(`btn-add-${type}`)?.addEventListener("click", () => { state.modal=type; state.modalData={branch:state.branch,payMethod:"โอน"}; render(); });
+    document.getElementById(`filter-date-${type}`)?.addEventListener("change", e => { state.modalData[`filter_${type}`]=e.target.value; render(); });
+  });
+
+  // Delete
+  document.querySelectorAll("[data-delid]").forEach(b => b.addEventListener("click", () => delTx(b.dataset.delid)));
+
+  // Modal events
+  document.getElementById("btn-cancel")?.addEventListener("click", closeModal);
+  document.getElementById("overlay")?.addEventListener("click", e => { if(e.target.id==="overlay") closeModal(); });
+
+  // Modal branch select
+  document.querySelectorAll("[data-modal-branch]").forEach(b => b.addEventListener("click", () => {
+    state.modalData.branch = b.dataset.modalBranch; render();
+  }));
+
+  // Payment method
+  document.querySelectorAll("[data-pay]").forEach(b => b.addEventListener("click", () => {
+    state.modalData.payMethod = b.dataset.pay; render();
+  }));
+
+  // Save transaction
+  document.getElementById("btn-save")?.addEventListener("click", () => {
+    const amount = parseFloat(document.getElementById("m-amount")?.value);
+    if (!amount || amount<=0) return alert("กรุณาใส่จำนวนเงิน");
+    const isIncome = state.modal==="income";
+    addTx({
+      type: state.modal,
+      amount,
+      branch: state.modalData.branch||state.branch,
+      category: document.getElementById("m-cat")?.value||"",
+      staffName: isIncome?(document.getElementById("m-staff")?.value||""):"",
+      paymentMethod: isIncome?(state.modalData.payMethod||"โอน"):"",
+      note: document.getElementById("m-note")?.value||"",
+      date: document.getElementById("m-date")?.value||todayStr(),
+    });
+  });
+
+  // Settings: update staff fields live
+  document.querySelectorAll("[data-staff-name]").forEach(input => {
+    input.addEventListener("input", e => {
+      const i = +e.target.dataset.staffName;
+      state.modalData.staffList[i].name = e.target.value;
+    });
+  });
+  document.querySelectorAll("[data-staff-rate]").forEach(input => {
+    input.addEventListener("input", e => {
+      const i = +e.target.dataset.staffRate;
+      state.modalData.staffList[i].dailyRate = parseFloat(e.target.value)||0;
+    });
+  });
+  document.querySelectorAll("[data-staff-comm]").forEach(input => {
+    input.addEventListener("input", e => {
+      const i = +e.target.dataset.staffComm;
+      state.modalData.staffList[i].commRate = parseFloat(e.target.value)||0;
+    });
+  });
+  document.querySelectorAll("[data-remove-staff]").forEach(b => b.addEventListener("click", () => {
+    state.modalData.staffList.splice(+b.dataset.removeStaff,1); render();
+  }));
+  document.getElementById("btn-add-staff")?.addEventListener("click", () => {
+    const name = document.getElementById("new-staff-name")?.value?.trim();
+    if (!name) return;
+    state.modalData.staffList.push({name,dailyRate:400,commRate:10}); render();
+  });
+  document.getElementById("btn-save-staff")?.addEventListener("click", () => {
+    saveStaff(state.modalData.staffList);
+  });
+}
+
+// ── Init ───────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
